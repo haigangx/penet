@@ -1,4 +1,4 @@
-#include "../penet/penet.h"
+#include "penet.h"
 
 //using namespace penet;
 

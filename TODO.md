@@ -1,1 +1,2 @@
-- [ ] 编写一个最简单的实现，让example/echo.cpp运行成功
+- [ ] 缂栧啓涓�涓渶绠�鍗曠殑瀹炵幇锛岃example/echo.cpp杩愯鎴愬姛
+- [ ] 浣跨敤CMake缂栬瘧椤圭洰
