@@ -3,3 +3,6 @@ CMakeCache.txt
 Makefile
 MyPenet
 cmake_install.cmake
+/.vscode/
+/build/
+
