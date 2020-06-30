@@ -1,5 +1,8 @@
 #pragma once
 
+#include "safe_queue.h"
+#include "define.h"
+
 #include <memory>
 #include <atomic>
 
@@ -16,10 +19,9 @@ public:
 class EventBase : public EventBases
 {
 public:
-    EventBase();
+    EventBase(int taskCapacity = 0);
     ~EventBase();
 
-    void init();
     void exit();
     void loop();
 
@@ -27,6 +29,13 @@ public:
 
 public:
     std::unique_ptr<EventImp> imp_;
+};
+
+struct IdleNode
+{
+    TcpConnPtr con_;
+    int64_t updated_;
+    TcpCallBack cb_;
 };
 
 
@@ -37,10 +46,13 @@ public:
     ~EventImp();
 
     void init();
+    void callIdleles();
+    Idle
 
 public:
-    EventBases *base_;
+    EventBase *base_;
     PollerBase *poller_;
     std::atomic<bool> exit_;
     int wakeupFds_[2];
+    SafeQueue<Task> tasks_;
 };

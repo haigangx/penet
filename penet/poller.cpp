@@ -80,4 +80,34 @@ void PollerEpoll::removeChannel(Channel *ch)
 void PollerEpoll::loop_once(int waitMs)
 {
     int64_t ticks = Util::timeMilli();
+    lastActive_ = epoll_wait(fd_, activeEvs_, kMaxEvents, waitMs);
+    int64_t used = Util::timeMilli() - ticks;
+    trace("epoll wait %d return %d errno %d used %lld millsecond", 
+                    waitMs, lastActive_, errno, (long long)used);
+    fatalif(lastActive_ == -1 && errno != EINTR, "epoll return error %d %s", 
+                    errno, strerror(errno));
+    while (--lastActive_ >= 0)
+    {
+        int i = lastActive_;
+        Channel *ch = (Channel *)activeEvs_[i].data.ptr;
+        int events = activeEvs_[i].events;
+        if (ch) 
+        {
+            if (events & (kReadEvent | POLLERR))
+            {
+                trace("channel %lld fd %d handle read", (long long)ch->id(), ch->fd());
+                ch->handleRead();
+            }
+            else if (events & kWriteEvent)
+            {
+                trace("channel %lld fd %d handle write", (long long)ch->id(), ch->fd());
+                ch->handleWrite();
+            }
+            else
+            {
+                fatal("unexpected poller events");
+            }
+            
+        }
+    }
 }

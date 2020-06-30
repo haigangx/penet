@@ -4,9 +4,6 @@
 #include <functional>
 #include "tcp_conn.h"
 
-using TcpConnPtr = TcpConn *;
-using TcpCallBack = std::function<void(const TcpConnPtr &)>;
-
 class EventBase;
 class TcpServer
 {
