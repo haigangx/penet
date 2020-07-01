@@ -51,10 +51,10 @@ void Channel::enableReadWrite(bool readable, bool writeable)
 
 bool Channel::readEnabled()
 {
-
+    return true;
 }
 
 bool Channel::writeEnabled()
 {
-
+    return true;
 }
