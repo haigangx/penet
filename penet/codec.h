@@ -26,6 +26,6 @@ class LengthCodec : public CodecBase
 public:
     int tryDecode(Slice data, Slice &msg) override;
     void encode(Slice msg, Buffer &buf) override;
-    CodecBase *clone() override { return new LineCodec(); }
+    CodecBase *clone() override { return new LengthCodec(); }
 };
 

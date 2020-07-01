@@ -89,7 +89,7 @@ public:
     //tcp空闲回调
     void addIdleCB(int idle, const TcpCallBack &cb);
 
-    //消息回调，此回调与onRead回调冲突，只能狗调用一个
+    //消息回调，此回调与onRead回调冲突，只能调用一个
     //codec所有权交给onMsg
     void onMsg(CodecBase *codec, const MsgCallBack &cb);
     //发送消息
@@ -116,11 +116,14 @@ private:
     void handleWrite(const TcpConnPtr &con);
     ssize_t isend(const char *buf, size_t len);
     void cleanup(const TcpConnPtr &con);
-    void connect(EventBase *base, const std::string &host, unsigned short port, int timeout, const std::string &localip);
+    void connect(EventBase *base, const std::string &host, 
+                unsigned short port, int timeout, const std::string &localip);
     void reconnect();
     void attach(EventBase *base, int fd, Ip4Addr local, Ip4Addr peer);
-    virtual int readImp(int fd, void *buf, size_t bytes) { return ::read(fd, buf, bytes); }
-    virtual int writeImp(int fd, const void *buf, size_t bytes) { return ::write(fd, buf, bytes); }
+    virtual int readImp(int fd, void *buf, size_t bytes) 
+        { return ::read(fd, buf, bytes); }
+    virtual int writeImp(int fd, const void *buf, size_t bytes) 
+        { return ::write(fd, buf, bytes); }
     virtual int handleHandshake(const TcpConnPtr &conn);
 
 private:
