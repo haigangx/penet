@@ -5,6 +5,7 @@
 #include "codec.h"
 #include "idleid.h"
 #include "channel.h"
+#include "poller.h"
 
 #include <memory>
 #include <functional>

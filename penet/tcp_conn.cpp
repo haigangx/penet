@@ -6,6 +6,19 @@
 #include "net.h"
 
 #include <poll.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+void handyUnregisterIdle(EventBase *base, const IdleId &idle)
+{
+    base->imp_->unregisterIdle(idle);
+}
+
+void handyUpdateIdle(EventBase *base, const IdleId &idle)
+{
+    base->imp_->updateIdle(idle);
+}
 
 TcpConn::TcpConn()
     : base_(NULL)
@@ -76,7 +89,10 @@ void TcpConn::send(const char *buf, size_t len)
 
 void TcpConn::addIdleCB(int idle, const TcpCallBack &cb)
 {
-
+    if (channel_)
+    {
+        idleIds_.push_back(getBase()->imp_->registerIdle(idle, shared_from_this(), cb));
+    }
 }
 
 void TcpConn::onMsg(CodecBase *codec, const MsgCallBack &cb)
@@ -125,7 +141,7 @@ void TcpConn::close()
     }
 }
 
-void TcpConn::handleRead(const TcpConnPtr &conn)
+void TcpConn::handleRead(const TcpConnPtr &con)
 {
     if (state_ == State::Handshaking && handleHandshake(con))
         return ;
@@ -225,7 +241,7 @@ void TcpConn::cleanup(const TcpConnPtr &con)
 {
     if (readcb_ && input_.size())
     {
-        readcb_(conn);
+        readcb_(con);
     }
     if (state_ == State::Handshaking)
         state_ = State::Failed;
@@ -306,7 +322,17 @@ void TcpConn::connect(EventBase *base, const std::string &host,
 
 void TcpConn::reconnect()
 {
-
+    auto con = shared_from_this();
+    getBase()->imp_->reconnectConns_.insert(con);
+    long long interval = reconnectInterval_ - (Util::timeMilli() - connectedTime_);
+    interval = interval > 0 ? interval : 0;
+    info("reconnect interval : %d will reconnect after %lld ms", reconnectInterval_, interval);
+    getBase()->runAfter(interval, [this, con](){
+        getBase()->imp_->reconnectConns_.erase(con);
+        connect(getBase(), destHost_, (unsigned short)destPort_, connectTimeout_, localIp_);
+    });
+    delete channel_;
+    channel_ = NULL;
 }
 
 void TcpConn::attach(EventBase *base, int fd, Ip4Addr local, Ip4Addr peer)
@@ -322,8 +348,8 @@ void TcpConn::attach(EventBase *base, int fd, Ip4Addr local, Ip4Addr peer)
     channel_ = new Channel(base, fd, kWriteEvent | kReadEvent);
     trace("tcp constructed %s - %s fd: %d", local_.toString().c_str(), peer_.toString().c_str(), fd);
     TcpConnPtr con = shared_from_this();
-    con->channel_->onRead( [=]{ con->handleRead(con); } )
-    con->channel_->onWrite( [=]{ con->handleWrite(con); } )
+    con->channel_->onRead( [=]{ con->handleRead(con); } );
+    con->channel_->onWrite( [=]{ con->handleWrite(con); } );
 }
 
 int TcpConn::handleHandshake(const TcpConnPtr &con)
